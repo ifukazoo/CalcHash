@@ -29,5 +29,6 @@ func main() {
 			fmt.Printf("%02X", b)
 		}
 	}
+	println("")
 	os.Exit(0)
 }
