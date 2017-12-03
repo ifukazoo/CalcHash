@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 )
@@ -13,22 +15,29 @@ func main() {
 		fmt.Fprint(os.Stderr, "usage:<cmd> <need to hash> [byte num]\n")
 		os.Exit(1)
 	}
-	bytes := []byte(argv[1])
-	sum := sha256.Sum256(bytes)
-	num := 0
+	sumString := sum256String(argv[1])
+
+	limit := math.MaxInt32
 	if len(argv) > 2 {
-		num, _ = strconv.Atoi(argv[2])
+		limit, _ = strconv.Atoi(argv[2])
 	}
-	if num != 0 {
-		for i := 0; i < num && i < len(sum); i++ {
-			fmt.Printf("%02X", sum[i])
+	sp := ""
+	for i := 0; i < limit*2 && i < len(sumString); i++ {
+		if i%5 == 0 {
+			fmt.Printf(sp)
+			sp = " "
 		}
-	} else {
-		// 全部出力
-		for _, b := range sum {
-			fmt.Printf("%02X", b)
-		}
+		fmt.Printf("%c", sumString[i])
 	}
-	println("")
-	os.Exit(0)
+	fmt.Printf("\n")
+}
+
+func sum256String(str string) string {
+	argByBytes := []byte(str)
+	sum := sha256.Sum256(argByBytes)
+	var buffer bytes.Buffer
+	for _, b := range sum {
+		buffer.WriteString(fmt.Sprintf("%02X", b))
+	}
+	return buffer.String()
 }
