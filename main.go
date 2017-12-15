@@ -3,31 +3,54 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
+	"flag"
 	"fmt"
-	"math"
 	"os"
 	"strconv"
 )
 
+var separator bool
+
+func init() {
+	flag.BoolVar(&separator, "p", false, "insert space every 5bytes.")
+	flag.Usage = func() {
+		fmt.Fprint(os.Stderr, "Usage:<cmd> [options] <source> [byte num]\n")
+		flag.PrintDefaults()
+	}
+}
 func main() {
-	argv := os.Args
-	if len(argv) == 1 {
-		fmt.Fprint(os.Stderr, "usage:<cmd> <need to hash> [byte num]\n")
+	flag.Parse()
+	nonflagArgv := flag.Args()
+	if len(nonflagArgv) == 0 {
+		flag.Usage()
 		os.Exit(1)
 	}
-	sumString := sum256String(argv[1])
+	sumString := sum256String(nonflagArgv[0])
 
-	limit := math.MaxInt32
-	if len(argv) > 2 {
-		limit, _ = strconv.Atoi(argv[2])
-	}
-	sp := ""
-	for i := 0; i < limit*2 && i < len(sumString); i++ {
-		if i%5 == 0 {
-			fmt.Printf(sp)
-			sp = " "
+	outputMaxByte := 32 // 256(bit) / 8(bit per byte)
+	if len(nonflagArgv) > 1 {
+		num, err := strconv.Atoi(nonflagArgv[1])
+		if err != nil {
+			flag.Usage()
+			os.Exit(1)
 		}
-		fmt.Printf("%c", sumString[i])
+		outputMaxByte = num
+	}
+
+	outputMaxChar := outputMaxByte * 2 // 2char per 1byte
+	if separator {
+		sp := ""
+		for i := 0; i < outputMaxChar && i < len(sumString); i++ {
+			if i%5 == 0 {
+				fmt.Printf(sp)
+				sp = " "
+			}
+			fmt.Printf("%c", sumString[i])
+		}
+	} else {
+		for i := 0; i < outputMaxChar && i < len(sumString); i++ {
+			fmt.Printf("%c", sumString[i])
+		}
 	}
 	fmt.Printf("\n")
 }
